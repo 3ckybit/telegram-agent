@@ -1,11 +1,13 @@
+# Core (Mac + Pi)
 python-telegram-bot==20.8
 anthropic==0.28.0
-faster-whisper==1.0.3
 redis==5.0.3
 APScheduler==3.10.4
 python-dotenv==1.0.1
-google-api-python-client==2.126.0
-google-auth-httplib2==0.2.0
-google-auth-oauthlib==1.2.0
+
+# Pi-only (install manually on Pi — requires ffmpeg + native build)
+# faster-whisper==1.0.3
+
+# Dev / Testing (Mac)
 pytest==8.2.0
 pytest-asyncio==0.23.6
