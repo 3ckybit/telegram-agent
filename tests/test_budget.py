@@ -3,43 +3,46 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 
-def test_cost_calculation_haiku():
-    from budget import calculate_cost
-    cost = calculate_cost("claude-haiku-4-5-20251001", input_tokens=1000, output_tokens=500)
-    assert abs(cost - (1000 * 0.0008 + 500 * 0.004) / 1000) < 0.0001
+def test_get_requests_returns_int():
+    from budget import get_requests_this_hour
+    with patch("budget._get_redis") as mock_redis:
+        mock_redis.return_value.get.return_value = b"5"
+        assert get_requests_this_hour() == 5
 
 
-def test_cost_calculation_sonnet():
-    from budget import calculate_cost
-    cost = calculate_cost("claude-sonnet-4-6", input_tokens=1000, output_tokens=500)
-    assert abs(cost - (1000 * 0.003 + 500 * 0.015) / 1000) < 0.0001
+def test_get_requests_returns_zero_when_empty():
+    from budget import get_requests_this_hour
+    with patch("budget._get_redis") as mock_redis:
+        mock_redis.return_value.get.return_value = None
+        assert get_requests_this_hour() == 0
 
 
-def test_cost_calculation_fable():
-    from budget import calculate_cost
-    cost = calculate_cost("claude-fable-5", input_tokens=1000, output_tokens=500)
-    assert abs(cost - (1000 * 0.015 + 500 * 0.075) / 1000) < 0.0001
+def test_check_rate_limit_ok():
+    from budget import check_rate_limit
+    with patch("budget.get_requests_this_hour", return_value=5):
+        assert check_rate_limit() == ""
 
 
-def test_budget_threshold_levels():
-    from budget import get_threshold_level
-    assert get_threshold_level(0.4, 2.0) == "ok"
-    assert get_threshold_level(1.1, 2.0) == "warning"
-    assert get_threshold_level(1.65, 2.0) == "alert"
-    assert get_threshold_level(1.82, 2.0) == "critical"
-    assert get_threshold_level(1.95, 2.0) == "lockdown"
+def test_check_rate_limit_warning():
+    from budget import check_rate_limit
+    with patch("budget.get_requests_this_hour", return_value=22):
+        result = check_rate_limit()
+        assert "22" in result
 
 
-def test_is_deep_allowed_blocks_at_critical():
-    from budget import is_deep_allowed, is_sonnet_allowed
-    with patch("budget.get_today_spend", return_value=1.85), \
-         patch("budget.DAILY_BUDGET_USD", 2.0):
-        assert is_deep_allowed() == False
-        assert is_sonnet_allowed() == True
+def test_check_rate_limit_blocked():
+    from budget import check_rate_limit
+    with patch("budget.get_requests_this_hour", return_value=30):
+        assert check_rate_limit() == "BLOCKED"
 
 
-def test_is_lockdown_blocks_sonnet():
-    from budget import is_sonnet_allowed
-    with patch("budget.get_today_spend", return_value=1.96), \
-         patch("budget.DAILY_BUDGET_USD", 2.0):
-        assert is_sonnet_allowed() == False
+def test_is_deep_allowed_when_under_limit():
+    from budget import is_deep_allowed
+    with patch("budget.get_requests_this_hour", return_value=10):
+        assert is_deep_allowed() is True
+
+
+def test_is_deep_allowed_blocked_at_limit():
+    from budget import is_deep_allowed
+    with patch("budget.get_requests_this_hour", return_value=30):
+        assert is_deep_allowed() is False

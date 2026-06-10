@@ -1,56 +1,56 @@
-import anthropic
-from config import ANTHROPIC_API_KEY, MODEL_HAIKU
-from budget import log_spend, get_budget_status_message, get_threshold_level, get_today_spend, DAILY_BUDGET_USD
+import subprocess
 from router import route
 from context import get_cached_context
+from budget import check_rate_limit, log_request
 
-_client = None
 
-
-def _get_client() -> anthropic.Anthropic:
-    global _client
-    if _client is None:
-        _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    return _client
+def _build_prompt(message: str, history: list, system: str) -> str:
+    parts = [f"<system>\n{system}\n</system>\n"]
+    if history:
+        parts.append("<conversation>")
+        for turn in history[-10:]:  # last 5 turns
+            role = "User" if turn["role"] == "user" else "Assistant"
+            parts.append(f"{role}: {turn['content']}")
+        parts.append("</conversation>\n")
+    parts.append(f"User: {message}")
+    return "\n".join(parts)
 
 
 def chat(message: str, conversation_history: list = None) -> tuple[str, str, str]:
-    """Returns (response_text, model_used, budget_alert_or_empty)."""
+    """Returns (response_text, model_used, alert_or_empty)."""
     model, reason = route(message)
-    system_prompt = get_cached_context()
-    messages = (conversation_history or []) + [{"role": "user", "content": message}]
+    alert = check_rate_limit()
+    if alert == "BLOCKED":
+        return "⏸️ Rate limit reached — δοκίμασε σε λίγο.", model, ""
 
-    response = _get_client().messages.create(
-        model=model,
-        max_tokens=2048,
-        system=system_prompt,
-        messages=messages,
+    system = get_cached_context()
+    prompt = _build_prompt(message, conversation_history or [], system)
+
+    result = subprocess.run(
+        ["claude", "--print", prompt, "--model", model],
+        capture_output=True, text=True, timeout=120
     )
 
-    text = response.content[0].text
-    total, level = log_spend(model, response.usage.input_tokens, response.usage.output_tokens)
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr or "claude CLI error")
 
-    alert = ""
-    if level == "warning":
-        alert = f"⚠️ Budget at 50%: {get_budget_status_message()}"
-    elif level == "alert":
-        alert = f"🟠 Budget at 80%! {get_budget_status_message()}"
-    elif level == "critical":
-        alert = f"🔴 Budget at 90%! Fable 5 disabled. {get_budget_status_message()}"
-    elif level == "lockdown":
-        alert = f"🚨 BUDGET LOCKDOWN (95%)! Haiku only. {get_budget_status_message()}"
-
-    return text, model, alert
+    log_request()
+    return result.stdout.strip(), model, alert if alert else ""
 
 
 def chat_scheduled(prompt: str, max_tokens: int = 512) -> str:
-    """For scheduled tasks — always Haiku, minimal tokens."""
-    system_prompt = get_cached_context()
-    response = _get_client().messages.create(
-        model=MODEL_HAIKU,
-        max_tokens=max_tokens,
-        system=system_prompt,
-        messages=[{"role": "user", "content": prompt}],
+    """For scheduled tasks — always Haiku via CLI."""
+    from config import MODEL_HAIKU
+    system = get_cached_context()
+    full_prompt = f"<system>\n{system}\n</system>\n\nUser: {prompt}"
+
+    result = subprocess.run(
+        ["claude", "--print", full_prompt, "--model", MODEL_HAIKU],
+        capture_output=True, text=True, timeout=60
     )
-    log_spend(MODEL_HAIKU, response.usage.input_tokens, response.usage.output_tokens)
-    return response.content[0].text
+
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr or "claude CLI error")
+
+    log_request()
+    return result.stdout.strip()

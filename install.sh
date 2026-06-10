@@ -21,10 +21,19 @@ else
     git clone "$REPO_URL" "$PROJECT_DIR"
 fi
 
-# 3. Python venv
+# 3. Claude Code CLI (uses Pro subscription — no API key needed)
+if ! command -v claude &> /dev/null; then
+    echo "Installing Claude Code CLI..."
+    curl -fsSL https://claude.ai/install.sh | sh
+    echo ""
+    echo "⚠️  Login required: run 'claude auth login' then re-run this script"
+    exit 0
+fi
+
+# 4. Python venv
 python3 -m venv "$PROJECT_DIR/venv"
 "$PROJECT_DIR/venv/bin/pip" install --quiet \
-    python-telegram-bot==20.8 anthropic==0.28.0 redis==5.0.3 \
+    python-telegram-bot==20.8 redis==5.0.3 \
     APScheduler==3.10.4 python-dotenv==1.0.1 faster-whisper==1.0.3
 
 # 4. Whisper model pre-download
