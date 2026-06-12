@@ -7,7 +7,10 @@ load_dotenv()
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_ALLOWED_USER_ID = int(os.environ["TELEGRAM_ALLOWED_USER_ID"])
 
-# Models (used as --model flag in claude CLI)
+# Anthropic API key (Haiku-only for Telegram — ~$0.15/month)
+ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
+
+# Model — Haiku only for bot, Sonnet/Fable5 from terminal
 MODEL_HAIKU = "claude-haiku-4-5-20251001"
 MODEL_SONNET = "claude-sonnet-4-6"
 MODEL_FABLE = "claude-fable-5"

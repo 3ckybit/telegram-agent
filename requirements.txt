@@ -1,5 +1,6 @@
-# Core (Mac + Pi) — uses claude CLI, no Anthropic API key needed
+# Core (Mac + Pi)
 python-telegram-bot==20.8
+anthropic==0.28.0
 redis==5.0.3
 APScheduler==3.10.4
 python-dotenv==1.0.1
