@@ -3,8 +3,8 @@ import redis as redis_lib
 from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from config import TZ, REDIS_URL, REDIS_TOKEN, REDIS_RESEARCH_CURSOR_KEY, DAILY_BUDGET_USD
-from budget import get_today_spend
+from config import TZ, REDIS_URL, REDIS_TOKEN, REDIS_RESEARCH_CURSOR_KEY
+from budget import get_requests_today, log_request, DAILY_REQUEST_LIMIT
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ async def deadline_nudge():
 
 async def idle_research():
     logger.info("Running idle research")
-    if get_today_spend() > DAILY_BUDGET_USD * 0.4:
+    if get_requests_today() > DAILY_REQUEST_LIMIT * 0.4:
         logger.info("Budget >40%%, skipping idle research")
         return
     try:
@@ -81,7 +81,7 @@ async def idle_research():
                 "2) One concrete next step Alex could take this week. "
                 "Under 150 words, specific, actionable, in Greek."}],
         )
-        log_spend(MODEL_SONNET, response.usage.input_tokens, response.usage.output_tokens)
+        log_request(response.usage.input_tokens, response.usage.output_tokens)
         r.incr(REDIS_RESEARCH_CURSOR_KEY)
         await _send(f"🔬 *Nightly Research*\n\n{response.content[0].text}")
     except Exception as e:
