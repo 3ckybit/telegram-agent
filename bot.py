@@ -75,7 +75,7 @@ async def handle_voice(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await _process(update, user_id, text)
     except Exception as e:
         logger.error("Voice failed: %s", e)
-        await update.message.reply_text("❌ Voice transcription failed. Try again.")
+        await update.message.reply_text(f"❌ {e}")
 
 
 async def _process(update: Update, user_id: int, text: str):
