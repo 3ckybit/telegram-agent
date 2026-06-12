@@ -1,5 +1,5 @@
 # Core (Mac + Pi)
-python-telegram-bot==20.8
+python-telegram-bot==21.3
 anthropic==0.28.0
 redis==5.0.3
 APScheduler==3.10.4
