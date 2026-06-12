@@ -23,7 +23,7 @@ fi
 # 3. Python venv + deps
 python3 -m venv "$PROJECT_DIR/venv"
 "$PROJECT_DIR/venv/bin/pip" install --quiet \
-    python-telegram-bot==21.3 anthropic==0.28.0 redis==5.0.3 \
+    python-telegram-bot==22.8 anthropic==0.28.0 redis==5.0.3 \
     APScheduler==3.10.4 python-dotenv==1.0.1
 
 # 4. Whisper (voice — optional, installs last)
