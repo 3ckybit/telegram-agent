@@ -5,7 +5,7 @@ from telegram.ext import (
     filters, ContextTypes
 )
 from config import TELEGRAM_BOT_TOKEN, TELEGRAM_ALLOWED_USER_ID
-from claude_client import chat
+from llm_client import chat
 from voice import download_and_transcribe
 from scheduler import create_scheduler, set_sender
 from budget import get_budget_status_message
@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 _history: dict[int, list] = {}
 
 MODEL_EMOJI = {
-    "claude-haiku-4-5-20251001": "⚡",
-    "claude-sonnet-4-6": "🔵",
-    "claude-fable-5": "🌟",
+    "meta/llama-3.1-8b-instruct": "⚡",
+    "nvidia/llama-3.3-nemotron-super-49b-v1": "🔵",
+    "qwen/qwen3.5-122b-a10b": "🌟",
 }
 
 
@@ -36,9 +36,9 @@ async def cmd_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "👋 *Alex's Universal Agent — online*\n\n"
         "Γράψε οτιδήποτε. Στείλε voice note για φωνητική εντολή.\n\n"
-        "⚡ Haiku — quick tasks\n"
-        "🔵 Sonnet — standard (default)\n"
-        "🌟 Fable 5 — /deep /plan /research /analyze\n\n"
+        "⚡ Llama 8B — quick tasks\n"
+        "🔵 Nemotron 49B — standard (default)\n"
+        "🌟 Qwen 122B — /deep /plan /research /analyze\n\n"
         "/budget — τρέχον spend\n"
         "/clear — καθαρισμός ιστορικού",
         parse_mode="Markdown"
@@ -92,7 +92,7 @@ async def _process(update: Update, user_id: int, text: str):
         if budget_alert:
             await update.message.reply_text(budget_alert)
     except Exception as e:
-        logger.error("Chat failed: %s", e)
+        logger.exception("Chat failed")
         await update.message.reply_text(f"❌ Error: {e}")
 
 

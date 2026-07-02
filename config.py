@@ -7,13 +7,19 @@ load_dotenv()
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_ALLOWED_USER_ID = int(os.environ["TELEGRAM_ALLOWED_USER_ID"])
 
-# Anthropic API key (Haiku-only for Telegram — ~$0.15/month)
-ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
+# NVIDIA NIM — free, OpenAI-compatible
+NVIDIA_API_KEY  = os.environ.get("NVIDIA_API_KEY", "PASTE_KEY_HERE")
+NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 
-# Model — Haiku only for bot, Sonnet/Fable5 from terminal
-MODEL_HAIKU = "claude-haiku-4-5-20251001"
-MODEL_SONNET = "claude-sonnet-4-6"
-MODEL_FABLE = "claude-fable-5"
+# Model tiers — all free via NVIDIA NIM (confirmed working 2026-06-29)
+MODEL_FAST   = "meta/llama-3.1-8b-instruct"               # quick / routing ✓
+MODEL_MAIN   = "nvidia/llama-3.3-nemotron-super-49b-v1"   # default responses ✓
+MODEL_LARGE  = "qwen/qwen3.5-122b-a10b"                   # deep / complex ✓
+
+# Aliases so existing code keeps working
+MODEL_HAIKU  = MODEL_FAST
+MODEL_SONNET = MODEL_MAIN
+MODEL_FABLE  = MODEL_LARGE
 
 # Upstash Redis
 REDIS_URL = os.environ["UPSTASH_REDIS_REST_URL"]

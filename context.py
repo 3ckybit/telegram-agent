@@ -28,12 +28,12 @@ def _refresh_vault_mirror():
     if not os.path.exists(VAULT_MIRROR_PATH):
         subprocess.run(
             ["git", "clone", "--depth=1", VAULT_GITHUB_REPO, VAULT_MIRROR_PATH],
-            capture_output=True, timeout=60
+            capture_output=True, stdin=subprocess.DEVNULL, timeout=60
         )
     else:
         subprocess.run(
             ["git", "-C", VAULT_MIRROR_PATH, "pull", "--ff-only"],
-            capture_output=True, timeout=30
+            capture_output=True, stdin=subprocess.DEVNULL, timeout=30
         )
 
 
@@ -94,12 +94,12 @@ Today: {today}
 {vault_summary[:3000]}
 
 ## Instructions
-- Be direct, opinionated. Alex thinks out loud — help him structure ideas.
-- Spot problems Alex hasn't mentioned. Flag stagnating projects.
-- Surface patterns across sessions.
-- Propose next steps without being asked.
-- Language: respond in Greek if Alex writes in Greek, English if English.
-- Credits matter. Don't produce excessive output unless asked.
+- You are a Telegram bot. Keep replies SHORT — 2-4 sentences max unless Alex asks for more.
+- Plain text only. No markdown, no bullet points, no headers, no bold, no asterisks.
+- Be direct and conversational, like texting a smart friend.
+- Language: Greek if Alex writes Greek, English if English.
+- Spot problems Alex hasn't mentioned. Be opinionated.
+- If asked for a list or detail, then expand — otherwise stay tight.
 """
 
 

@@ -7,12 +7,8 @@ import redis as redis_lib
 from datetime import date
 from config import REDIS_URL, REDIS_TOKEN
 
-DAILY_REQUEST_LIMIT = 50
-WARN_AT = 40
-
-# Haiku pricing per 1K tokens
-HAIKU_INPUT_PRICE  = 0.0008
-HAIKU_OUTPUT_PRICE = 0.004
+DAILY_REQUEST_LIMIT = 200  # NVIDIA free tier — generous limit
+WARN_AT = 150
 
 
 def _get_redis():
@@ -40,13 +36,11 @@ def get_cost_today() -> float:
 
 
 def log_request(input_tokens: int = 0, output_tokens: int = 0):
-    cost = (input_tokens * HAIKU_INPUT_PRICE + output_tokens * HAIKU_OUTPUT_PRICE) / 1000
+    # NVIDIA NIM is free — just track request count
     try:
         r = _get_redis()
         r.incr(_day_key("requests"))
         r.expire(_day_key("requests"), 86400 * 2)
-        r.incrbyfloat(_day_key("cost"), cost)
-        r.expire(_day_key("cost"), 86400 * 2)
     except Exception:
         pass
 
@@ -62,8 +56,7 @@ def check_rate_limit() -> str:
 
 def get_budget_status_message() -> str:
     count = get_requests_today()
-    cost = get_cost_today()
-    return f"📊 {count}/{DAILY_REQUEST_LIMIT} requests today — ${cost:.4f} spent"
+    return f"📊 {count}/{DAILY_REQUEST_LIMIT} requests today — NVIDIA NIM (free)"
 
 
 def is_deep_allowed() -> bool:
