@@ -53,8 +53,9 @@ def get_redis() -> redis.Redis:
                 "Get them from the Upstash console (communal-chow-143616 instance) "
                 "and add to ~/telegram-agent/.env"
             )
-        # redis-py supports Upstash via standard redis:// URL (rediss:// for TLS)
-        # If using the REST URL format, convert or use upstash-redis package instead.
+        # Must be a redis:// or rediss:// TCP connection string — NOT the Upstash
+        # REST API URL (https://...). Get it from the Upstash console's "Connect"
+        # tab (redis-cli / ioredis snippet), not the REST API tab.
         _client = redis.from_url(
             UPSTASH_REDIS_REST_URL, password=UPSTASH_REDIS_REST_TOKEN
         )
