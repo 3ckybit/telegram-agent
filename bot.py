@@ -9,6 +9,7 @@ from llm_client import chat
 from voice import download_and_transcribe
 from scheduler import create_scheduler, set_sender
 from budget import get_budget_status_message
+from memory_client import remember
 
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -58,6 +59,21 @@ async def cmd_clear(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("✅ Ιστορικό καθαρίστηκε.")
 
 
+async def cmd_remember(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not _guard(update):
+        return
+    content = " ".join(ctx.args).strip() if ctx.args else ""
+    if not content:
+        await update.message.reply_text("Χρήση: /remember <κάτι που θες να θυμάμαι>")
+        return
+    try:
+        remember(content, category="general", source="telegram-bot")
+        await update.message.reply_text("🧠 Καταγράφηκε.")
+    except Exception as e:
+        logger.error("Remember failed: %s", e)
+        await update.message.reply_text(f"❌ Απέτυχε: {e}")
+
+
 async def handle_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if not _guard(update):
         return
@@ -102,6 +118,7 @@ def main():
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("budget", cmd_budget))
     app.add_handler(CommandHandler("clear", cmd_clear))
+    app.add_handler(CommandHandler("remember", cmd_remember))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
 
